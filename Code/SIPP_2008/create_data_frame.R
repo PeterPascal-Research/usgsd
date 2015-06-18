@@ -4,7 +4,7 @@
 # use forward slashes instead of back slashes
 
 # uncomment this line by removing the `#` at the front..
-setwd( "~/GitHub/PeterPascal-Research/SIPP/SIPP_2008" )
+setwd( "~/GitHub/PeterPascal-Research/Data/SIPP_2008/db" )
 # ..in order to set your current working directory
 
 
@@ -40,7 +40,7 @@ db <- dbConnect( SQLite() , "SIPP08.db" )
 
 # which waves would you like to pull?  to pull an entire calendar year, you must pull each interview that overlaps the year you want
 
-waves <- 1:16 
+waves <- 1:12 
 year <- c(2008, 2009, 2010, 2011, 2012, 2013)  
 mainwgt <- c('lgtcy1wt','lgtcy2wt','lgtcy3wt', 'lgtcy4wt', 'lgtcy5wt') 
 yrnum <- 1:5
@@ -177,13 +177,14 @@ head( x )
 
 write.csv(x, "SIPP_2008_Core_Demog.csv")
 
+
 # #################################################
 # # save your data frame for quick analyses later #
 # 
 # # in order to bypass the above steps for future analyses,
 # # the data frame in its current state can be saved now
 # # (or, really, anytime you like).  uncomment this line:
-# # save( y , file = "sipp08.cy.rda" )
+save( x , file = "sipp08_Demog.cy.rda" )
 # # or, to save to another directory, specify the entire filepath
 # # save( y , file = "C:/My Directory/sipp08.cy.rda" )
 # 
@@ -212,6 +213,14 @@ rm(x, mw, core.kv)
 
 gc()
 
+#remove temp tables
+for (i in dbListTables(db)){
+  if(
+    grepl("sy", x = i)==T){ 
+    dbRemoveTable(db, i)
+  }     
+}
+
 ########################################################################################
 #income 
 core.kv <- 
@@ -235,6 +244,121 @@ core.kv <-
 ########################################################################
 # loop through all twelve months, merging each month onto the previous #
 
+start.time <- Sys.time()
+
+for ( i in 1:12 ){
+  
+  # print the current progress to the screen
+  cat( "currently working on month" , i , "of 12" , "\r" )
+  
+  # create a character vector containing each of the column names,
+  # with a month number at the end, so long as it's not one of the two merge variables
+  numbered.core.kv <-
+    # determine column names of each variable
+    paste0(
+      core.kv ,
+      ifelse( 
+        # if the column name is either of these two..
+        core.kv %in% c( "ssuid" , "epppnum" ) , 
+        # ..nothing gets pasted.
+        "" , 
+        # otherwise, a month number gets pasted
+        i 
+      ) 
+    )
+  
+  
+  # create the same character vector missing 'ssuid' and 'epppnum'
+  no.se.core.kv <- numbered.core.kv[ !( numbered.core.kv %in% c( 'ssuid' , 'epppnum' ) ) ]
+  
+  
+  # create a sql string containing the select command used to pull only a defined number of columns
+  # and records containing january, looking at each of the specified waves
+  sql.string <- 
+    # this outermost paste0 just specifies the temporary table to create
+    paste0(
+      "create temp table sm as " ,
+      # this paste0 combines all of the strings contained inside it,
+      # separating each of them by "union all" -- actively querying multiple waves at once
+      paste0( 
+        paste0( 
+          "select " , 
+          # this paste command collapses all of the old + new variable names together,
+          # separating them by a comma
+          paste( 
+            # this paste command combines the old and new variable names, with an "as" in between
+            paste(
+              core.kv , 
+              "as" ,
+              numbered.core.kv 
+            ) ,
+            collapse = "," 
+          ) , 
+          " from w" 
+        ) , 
+        waves , 
+        paste0( 
+          " where rhcalmn == " ,
+          i ,
+          " AND rhcalyr == " , 
+          year 
+        ) , 
+        collapse = " union all " 
+      )
+    )
+  
+  # take a look at the full query if you like..
+  sql.string
+  
+  # run the actual command (this takes a while)
+  dbSendQuery( db , sql.string )
+  
+  # if it's the first month..
+  if ( i == 1 ){
+    
+    # create the single year (sy1) table from the january table..
+    dbSendQuery( db , "create temp table sy1 as select * from sm" )
+    
+    # ..and drop the current month table.
+    dbRemoveTable( db , "sm" )
+    
+    # otherwise..
+  } else {
+    
+    # merge the current month onto the single year (sy#) table..
+    dbSendQuery( 
+      db , 
+      paste0( 
+        "create temp table sy" , 
+        i , 
+        " as select a.* , " ,
+        paste0( "b." , no.se.core.kv , collapse = "," ) , 
+        " from sy" ,
+        i - 1 ,
+        " as a left join sm as b on a.ssuid == b.ssuid AND a.epppnum == b.epppnum" 
+      )
+    )
+    
+    # ..and drop the current month table.
+    dbRemoveTable( db , "sm" )
+    
+  }
+  
+}
+
+# subtract the current time from the starting time,
+# and print the total twelve-loop time to the screen
+Sys.time() - start.time
+
+
+# once the single year (sy) table has information from all twelve months, extract it from the rsqlite database
+x <- dbGetQuery( db , "select * from sy12" )
+
+
+# look at the first six records of x
+head( x )
+
+write.csv(x, "SIPP_2008_Core_Income.csv")
 
 
 # #################################################
@@ -243,7 +367,7 @@ core.kv <-
 # # in order to bypass the above steps for future analyses,
 # # the data frame in its current state can be saved now
 # # (or, really, anytime you like).  uncomment this line:
-# # save( y , file = "sipp08.cy.rda" )
+save( x , file = "sipp08_Income.cy.rda" )
 # # or, to save to another directory, specify the entire filepath
 # # save( y , file = "C:/My Directory/sipp08.cy.rda" )
 # 
@@ -271,6 +395,13 @@ write.csv(mw, "SIPP_2008_Weights_Income.csv")
 rm(x, mw, core.kv)
 
 gc()
+
+for (i in dbListTables(db)){
+  if(
+    grepl("sy", x = i)==T){ 
+    dbRemoveTable(db, i)
+  }     
+}
 
 #####################################################################################
 #labor
@@ -413,7 +544,7 @@ write.csv(x, "SIPP_2008_Core_labor.csv")
 # # in order to bypass the above steps for future analyses,
 # # the data frame in its current state can be saved now
 # # (or, really, anytime you like).  uncomment this line:
-# # save( y , file = "sipp08.cy.rda" )
+save( x , file = "sipp08_Labor.cy.rda" )
 # # or, to save to another directory, specify the entire filepath
 # # save( y , file = "C:/My Directory/sipp08.cy.rda" )
 # 
@@ -441,6 +572,14 @@ write.csv(mw, "SIPP_2008_Weights_labor.csv")
 rm(x, mw, core.kv)
 
 gc()
+
+
+for (i in dbListTables(db)){
+  if(
+    grepl("sy", x = i)==T){ 
+    dbRemoveTable(db, i)
+  }     
+}
 
 ################################################################
 #weights
@@ -582,7 +721,7 @@ write.csv(x, "SIPP_2008_Core_weights.csv")
 # # in order to bypass the above steps for future analyses,
 # # the data frame in its current state can be saved now
 # # (or, really, anytime you like).  uncomment this line:
-# # save( y , file = "sipp08.cy.rda" )
+save( y , file = "sipp08_Weights.cy.rda" )
 # # or, to save to another directory, specify the entire filepath
 # # save( y , file = "C:/My Directory/sipp08.cy.rda" )
 # 
@@ -606,3 +745,12 @@ mw$spanel <- NULL
 head( mw )
 
 write.csv(mw, "SIPP_2008_Weights_weights.csv")
+
+gc()
+
+for (i in dbListTables(db)){
+  if(
+    grepl("sy", x = i)==T){ 
+    dbRemoveTable(db, i)
+  }     
+}
