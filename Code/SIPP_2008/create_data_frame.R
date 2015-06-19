@@ -40,7 +40,7 @@ db <- dbConnect( SQLite() , "SIPP08.db" )
 
 # which waves would you like to pull?  to pull an entire calendar year, you must pull each interview that overlaps the year you want
 
-waves <- 1:12 
+waves <- 1:16 
 year <- c(2008, 2009, 2010, 2011, 2012, 2013)  
 mainwgt <- c('lgtcy1wt','lgtcy2wt','lgtcy3wt', 'lgtcy4wt', 'lgtcy5wt') 
 yrnum <- 1:5
@@ -185,6 +185,7 @@ write.csv(x, "SIPP_2008_Core_Demog.csv")
 # # the data frame in its current state can be saved now
 # # (or, really, anytime you like).  uncomment this line:
 save( x , file = "sipp08_Demog.cy.rda" )
+
 # # or, to save to another directory, specify the entire filepath
 # # save( y , file = "C:/My Directory/sipp08.cy.rda" )
 # 
@@ -208,6 +209,8 @@ mw$spanel <- NULL
 head( mw )
 
 write.csv(mw, "SIPP_2008_Weights_Demog.csv")
+
+save( mw , file = "sipp08_Demog_weights.cy.rda" )
 
 rm(x, mw, core.kv)
 
@@ -392,6 +395,8 @@ head( mw )
 
 write.csv(mw, "SIPP_2008_Weights_Income.csv")
 
+save( mw , file = "sipp08_Income_weights.cy.rda" )
+
 rm(x, mw, core.kv)
 
 gc()
@@ -569,6 +574,8 @@ head( mw )
 
 write.csv(mw, "SIPP_2008_Weights_labor.csv")
 
+save( mw , file = "sipp08_Labor_weights.cy.rda" )
+
 rm(x, mw, core.kv)
 
 gc()
@@ -721,7 +728,7 @@ write.csv(x, "SIPP_2008_Core_weights.csv")
 # # in order to bypass the above steps for future analyses,
 # # the data frame in its current state can be saved now
 # # (or, really, anytime you like).  uncomment this line:
-save( y , file = "sipp08_Weights.cy.rda" )
+save( x , file = "sipp08_Weights.cy.rda" )
 # # or, to save to another directory, specify the entire filepath
 # # save( y , file = "C:/My Directory/sipp08.cy.rda" )
 # 
@@ -745,6 +752,9 @@ mw$spanel <- NULL
 head( mw )
 
 write.csv(mw, "SIPP_2008_Weights_weights.csv")
+
+save( mw , file = "sipp08_Weights_weights.cy.rda" )
+
 
 gc()
 
