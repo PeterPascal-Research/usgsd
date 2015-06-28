@@ -63,7 +63,8 @@ core.kv <-
 # loop through all twelve months, merging each month onto the previous #
 start.time <- Sys.time()
 
-for ( i in 1:12 ){
+  
+for ( i in 12:12 ){
 
 	# print the current progress to the screen
 	cat( "currently working on month" , i , "of 12" , "\r" )
@@ -131,8 +132,8 @@ for ( i in 1:12 ){
 	dbSendQuery( db , sql.string )
 	
 	# if it's the first month..
-	if ( i == 1 ){
-	
+# 	if ( i == 1 ){
+# 	
 		# create the single year (sy1) table from the january table..
 		dbSendQuery( db , "create temp table sy1 as select * from sm" )
 		
@@ -140,27 +141,27 @@ for ( i in 1:12 ){
 		dbRemoveTable( db , "sm" )
 	
 	# otherwise..
-	} else {
-	
-		# merge the current month onto the single year (sy#) table..
-		dbSendQuery( 
-			db , 
-			paste0( 
-				"create temp table sy" , 
-				i , 
-				" as select a.* , " ,
-				paste0( "b." , no.se.core.kv , collapse = "," ) , 
-				" from sy" ,
-				i - 1 ,
-				" as a left join sm as b on a.ssuid == b.ssuid AND a.epppnum == b.epppnum" 
-			)
-		)
+# 	} else {
+# 	
+# 		# merge the current month onto the single year (sy#) table..
+# 		dbSendQuery( 
+# 			db , 
+# 			paste0( 
+# 				"create temp table sy" , 
+# 				i , 
+# 				" as select a.* , " ,
+# 				paste0( "b." , no.se.core.kv , collapse = "," ) , 
+# 				" from sy" ,
+# 				i - 1 ,
+# 				" as a left join sm as b on a.ssuid == b.ssuid AND a.epppnum == b.epppnum" 
+# 			)
+# 		)
 		
 		# ..and drop the current month table.
 		dbRemoveTable( db , "sm" )
 	
-	}
-
+# 	}
+# 
 }
 
 # subtract the current time from the starting time,
@@ -169,13 +170,13 @@ Sys.time() - start.time
 
 
 # once the single year (sy) table has information from all twelve months, extract it from the rsqlite database
-x <- dbGetQuery( db , "select * from sy12" )
+demog_m12 <- dbGetQuery( db , "select * from sy1" )
 
 
 # look at the first six records of x
-head( x )
+head( demog_m12 )
 
-write.csv(x, "SIPP_2008_Core_Demog.csv")
+#write.csv(demog_m1, "SIPP_2008_Core_Demog.csv")
 
 
 # #################################################
@@ -184,7 +185,7 @@ write.csv(x, "SIPP_2008_Core_Demog.csv")
 # # in order to bypass the above steps for future analyses,
 # # the data frame in its current state can be saved now
 # # (or, really, anytime you like).  uncomment this line:
-save( x , file = "sipp08_Demog.cy.rda" )
+save( demog_m12 , file = "sipp08_Demog_m12.cy.rda" )
 
 # # or, to save to another directory, specify the entire filepath
 # # save( y , file = "C:/My Directory/sipp08.cy.rda" )
@@ -200,19 +201,19 @@ save( x , file = "sipp08_Demog.cy.rda" )
 #access the appropriate main weight data #
 #run the sql query constructed above, save the resulting table in a new data frame called 
 #'mw' that will now be stored in RAM
-mw <- dbGetQuery( db , "select * from wgtw16" )
+demog_weights_m12 <- dbGetQuery( db , "select * from wgtw16" )
  
 # # dump the `spanel` variable, which might otherwise sour up your merge
-mw$spanel <- NULL
+demog_weights_m12$spanel <- NULL
 
 # # look at the first six records of mw
-head( mw )
+head( demog_weights_m12 )
 
-write.csv(mw, "SIPP_2008_Weights_Demog.csv")
+#write.csv(demog_weights_m1, "SIPP_2008_Weights_Demog.csv")
 
-save( mw , file = "sipp08_Demog_weights.cy.rda" )
+save( demog_weights_m12 , file = "sipp08_Demog_weights_m12.cy.rda" )
 
-rm(x, mw, core.kv)
+rm(demog_m12, demog_weights_m12, core.kv)
 
 gc()
 
@@ -249,7 +250,7 @@ core.kv <-
 
 start.time <- Sys.time()
 
-for ( i in 1:12 ){
+for ( i in 12:12){
   
   # print the current progress to the screen
   cat( "currently working on month" , i , "of 12" , "\r" )
@@ -317,8 +318,8 @@ for ( i in 1:12 ){
   dbSendQuery( db , sql.string )
   
   # if it's the first month..
-  if ( i == 1 ){
-    
+#   if ( i == 1 ){
+#     
     # create the single year (sy1) table from the january table..
     dbSendQuery( db , "create temp table sy1 as select * from sm" )
     
@@ -326,27 +327,27 @@ for ( i in 1:12 ){
     dbRemoveTable( db , "sm" )
     
     # otherwise..
-  } else {
-    
-    # merge the current month onto the single year (sy#) table..
-    dbSendQuery( 
-      db , 
-      paste0( 
-        "create temp table sy" , 
-        i , 
-        " as select a.* , " ,
-        paste0( "b." , no.se.core.kv , collapse = "," ) , 
-        " from sy" ,
-        i - 1 ,
-        " as a left join sm as b on a.ssuid == b.ssuid AND a.epppnum == b.epppnum" 
-      )
-    )
-    
-    # ..and drop the current month table.
-    dbRemoveTable( db , "sm" )
-    
-  }
-  
+#   } else {
+#     
+#     # merge the current month onto the single year (sy#) table..
+#     dbSendQuery( 
+#       db , 
+#       paste0( 
+#         "create temp table sy" , 
+#         i , 
+#         " as select a.* , " ,
+#         paste0( "b." , no.se.core.kv , collapse = "," ) , 
+#         " from sy" ,
+#         i - 1 ,
+#         " as a left join sm as b on a.ssuid == b.ssuid AND a.epppnum == b.epppnum" 
+#       )
+#     )
+#     
+#     # ..and drop the current month table.
+#     dbRemoveTable( db , "sm" )
+#     
+#   }
+#   
 }
 
 # subtract the current time from the starting time,
@@ -355,13 +356,13 @@ Sys.time() - start.time
 
 
 # once the single year (sy) table has information from all twelve months, extract it from the rsqlite database
-x <- dbGetQuery( db , "select * from sy12" )
+income_m12 <- dbGetQuery( db , "select * from sy1" )
 
 
 # look at the first six records of x
-head( x )
+head( income_m12 )
 
-write.csv(x, "SIPP_2008_Core_Income.csv")
+#write.csv(x, "SIPP_2008_Core_Income.csv")
 
 
 # #################################################
@@ -370,7 +371,7 @@ write.csv(x, "SIPP_2008_Core_Income.csv")
 # # in order to bypass the above steps for future analyses,
 # # the data frame in its current state can be saved now
 # # (or, really, anytime you like).  uncomment this line:
-save( x , file = "sipp08_Income.cy.rda" )
+save( income_m12 , file = "sipp08_Income_m12.cy.rda" )
 # # or, to save to another directory, specify the entire filepath
 # # save( y , file = "C:/My Directory/sipp08.cy.rda" )
 # 
@@ -385,19 +386,19 @@ save( x , file = "sipp08_Income.cy.rda" )
 #access the appropriate main weight data #
 #run the sql query constructed above, save the resulting table in a new data frame called 
 #'mw' that will now be stored in RAM
-mw <- dbGetQuery( db , "select * from wgtw16" )
+income_weights_m12 <- dbGetQuery( db , "select * from wgtw16" )
  
 # # dump the `spanel` variable, which might otherwise sour up your merge
-mw$spanel <- NULL
+income_weights_m12$spanel <- NULL
 
 # # look at the first six records of mw
-head( mw )
+head( income_weights_m12 )
 
-write.csv(mw, "SIPP_2008_Weights_Income.csv")
+#write.csv(mw, "SIPP_2008_Weights_Income.csv")
 
-save( mw , file = "sipp08_Income_weights.cy.rda" )
+save( income_weights_m12 , file = "sipp08_Income_weights_m12.cy.rda" )
 
-rm(x, mw, core.kv)
+rm(income_m12, income_weights_m12, core.kv)
 
 gc()
 
@@ -429,7 +430,7 @@ core.kv <-
 # loop through all twelve months, merging each month onto the previous #
 start.time <- Sys.time()
 
-for ( i in 1:12 ){
+for ( i in 12:12 ){
 
 	# print the current progress to the screen
 	cat( "currently working on month" , i , "of 12" , "\r" )
@@ -497,8 +498,8 @@ for ( i in 1:12 ){
 	dbSendQuery( db , sql.string )
 	
 	# if it's the first month..
-	if ( i == 1 ){
-	
+# 	if ( i == 1 ){
+# 	
 		# create the single year (sy1) table from the january table..
 		dbSendQuery( db , "create temp table sy1 as select * from sm" )
 		
@@ -506,26 +507,26 @@ for ( i in 1:12 ){
 		dbRemoveTable( db , "sm" )
 	
 	# otherwise..
-	} else {
-	
-		# merge the current month onto the single year (sy#) table..
-		dbSendQuery( 
-			db , 
-			paste0( 
-				"create temp table sy" , 
-				i , 
-				" as select a.* , " ,
-				paste0( "b." , no.se.core.kv , collapse = "," ) , 
-				" from sy" ,
-				i - 1 ,
-				" as a left join sm as b on a.ssuid == b.ssuid AND a.epppnum == b.epppnum" 
-			)
-		)
-		
-		# ..and drop the current month table.
-		dbRemoveTable( db , "sm" )
-	
-	}
+# 	} else {
+# 	
+# 		# merge the current month onto the single year (sy#) table..
+# 		dbSendQuery( 
+# 			db , 
+# 			paste0( 
+# 				"create temp table sy" , 
+# 				i , 
+# 				" as select a.* , " ,
+# 				paste0( "b." , no.se.core.kv , collapse = "," ) , 
+# 				" from sy" ,
+# 				i - 1 ,
+# 				" as a left join sm as b on a.ssuid == b.ssuid AND a.epppnum == b.epppnum" 
+# 			)
+# 		)
+# 		
+# 		# ..and drop the current month table.
+# 		dbRemoveTable( db , "sm" )
+# 	
+# 	}
 
 }
 
@@ -535,13 +536,13 @@ Sys.time() - start.time
 
 
 # once the single year (sy) table has information from all twelve months, extract it from the rsqlite database
-x <- dbGetQuery( db , "select * from sy12" )
+labor_m12 <- dbGetQuery( db , "select * from sy1" )
 
 
 # look at the first six records of x
-head( x )
+head( labor_m12 )
 
-write.csv(x, "SIPP_2008_Core_labor.csv")
+#write.csv(labor_m2, "SIPP_2008_Core_labor.csv")
 
 # #################################################
 # # save your data frame for quick analyses later #
@@ -549,7 +550,7 @@ write.csv(x, "SIPP_2008_Core_labor.csv")
 # # in order to bypass the above steps for future analyses,
 # # the data frame in its current state can be saved now
 # # (or, really, anytime you like).  uncomment this line:
-save( x , file = "sipp08_Labor.cy.rda" )
+save( labor_m12 , file = "sipp08_Labor_m12.cy.rda" )
 # # or, to save to another directory, specify the entire filepath
 # # save( y , file = "C:/My Directory/sipp08.cy.rda" )
 # 
@@ -564,19 +565,19 @@ save( x , file = "sipp08_Labor.cy.rda" )
 #access the appropriate main weight data #
 #run the sql query constructed above, save the resulting table in a new data frame called 
 #'mw' that will now be stored in RAM
-mw <- dbGetQuery( db , "select * from wgtw16" )
+labor_weights_m12 <- dbGetQuery( db , "select * from wgtw16" )
  
 # # dump the `spanel` variable, which might otherwise sour up your merge
-mw$spanel <- NULL
+labor_weights_m12$spanel <- NULL
 
 # # look at the first six records of mw
-head( mw )
+head( labor_weights_m12 )
 
-write.csv(mw, "SIPP_2008_Weights_labor.csv")
+#write.csv(labor_weights_m1, "SIPP_2008_Weights_labor.csv")
 
-save( mw , file = "sipp08_Labor_weights.cy.rda" )
+save( labor_weights_m12 , file = "sipp08_Labor_weights_m12.cy.rda" )
 
-rm(x, mw, core.kv)
+rm(labor_m12, labor_weights_m12, core.kv)
 
 gc()
 
@@ -587,6 +588,8 @@ for (i in dbListTables(db)){
     dbRemoveTable(db, i)
   }     
 }
+
+
 
 ################################################################
 #weights
@@ -608,7 +611,7 @@ core.kv <-
 # loop through all twelve months, merging each month onto the previous #
 start.time <- Sys.time()
 
-for ( i in 1:12 ){
+for ( i in 12:12 ){
 
 	# print the current progress to the screen
 	cat( "currently working on month" , i , "of 12" , "\r" )
@@ -676,35 +679,35 @@ for ( i in 1:12 ){
 	dbSendQuery( db , sql.string )
 	
 	# if it's the first month..
-	if ( i == 1 ){
+	#if ( i == 1 ){
 	
 		# create the single year (sy1) table from the january table..
-		dbSendQuery( db , "create temp table sy1 as select * from sm" )
+		dbSendQuery( db , paste0("create temp table sy1 as select * from sm" ))
 		
 		# ..and drop the current month table.
 		dbRemoveTable( db , "sm" )
 	
 	# otherwise..
-	} else {
+	#} else {
 	
-		# merge the current month onto the single year (sy#) table..
-		dbSendQuery( 
-			db , 
-			paste0( 
-				"create temp table sy" , 
-				i , 
-				" as select a.* , " ,
-				paste0( "b." , no.se.core.kv , collapse = "," ) , 
-				" from sy" ,
-				i - 1 ,
-				" as a left join sm as b on a.ssuid == b.ssuid AND a.epppnum == b.epppnum" 
-			)
-		)
+# 		# merge the current month onto the single year (sy#) table..
+# 		dbSendQuery( 
+# 			db , 
+# 			paste0( 
+# 				"create temp table sy" , 
+# 				i , 
+# 				" as select a.* , " ,
+# 				paste0( "b." , no.se.core.kv , collapse = "," ) , 
+# 				" from sy" ,
+# 				i - 1 ,
+# 				" as a left join sm as b on a.ssuid == b.ssuid AND a.epppnum == b.epppnum" 
+# 			)
+# 		)
 		
 		# ..and drop the current month table.
-		dbRemoveTable( db , "sm" )
+		#dbRemoveTable( db , "sm" )
 	
-	}
+#	}
 
 }
 
@@ -714,13 +717,13 @@ Sys.time() - start.time
 
 
 # once the single year (sy) table has information from all twelve months, extract it from the rsqlite database
-x <- dbGetQuery( db , "select * from sy12" )
+weights_m12 <- dbGetQuery( db , "select * from sy1")
 
 
 # look at the first six records of x
-head( x )
+head( weights_m12 )
 
-write.csv(x, "SIPP_2008_Core_weights.csv")
+#write.csv(x, "SIPP_2008_Core_weights.csv")
 
 # #################################################
 # # save your data frame for quick analyses later #
@@ -728,7 +731,7 @@ write.csv(x, "SIPP_2008_Core_weights.csv")
 # # in order to bypass the above steps for future analyses,
 # # the data frame in its current state can be saved now
 # # (or, really, anytime you like).  uncomment this line:
-save( x , file = "sipp08_Weights.cy.rda" )
+save( weights_m12 , file = "sipp08_Weights_m12.cy.rda" )
 # # or, to save to another directory, specify the entire filepath
 # # save( y , file = "C:/My Directory/sipp08.cy.rda" )
 # 
@@ -743,17 +746,17 @@ save( x , file = "sipp08_Weights.cy.rda" )
 #access the appropriate main weight data #
 #run the sql query constructed above, save the resulting table in a new data frame called 
 #'mw' that will now be stored in RAM
-mw <- dbGetQuery( db , "select * from wgtw16" )
+weights_weights_m12 <- dbGetQuery( db , "select * from wgtw16" )
  
 # # dump the `spanel` variable, which might otherwise sour up your merge
-mw$spanel <- NULL
+weights_weights_m12$spanel <- NULL
 
 # # look at the first six records of mw
-head( mw )
+head( weights_weights_m12 )
 
-write.csv(mw, "SIPP_2008_Weights_weights.csv")
+#write.csv(weights_weights_m1, "SIPP_2008_Weights_weights.csv")
 
-save( mw , file = "sipp08_Weights_weights.cy.rda" )
+save( weights_weights_m12 , file = "sipp08_Weights_weights_m12.cy.rda" )
 
 
 gc()
